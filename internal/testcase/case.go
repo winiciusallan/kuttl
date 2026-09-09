@@ -166,6 +166,11 @@ func (c *Case) GetName() string {
 	return c.name
 }
 
+// Succeeded returns true if every step of the test case passed.
+func (c *Case) Succeeded() bool {
+	return c.succeeded
+}
+
 func (c *Case) deleteNamespace(cl clientWithKubeConfig) error {
 	cl.Logf("Deleting namespace %q", c.ns.name)
 
