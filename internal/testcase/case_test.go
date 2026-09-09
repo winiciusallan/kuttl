@@ -489,6 +489,7 @@ func TestCase_createNamespace(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			c := NewCase(name, "", tt.options...)
+			c.succeeded = true
 			tm := &testMock{}
 			cl := tt.cl(t, c.ns.name)
 			if npc, ok := cl.(*noPermClient); ok {
@@ -500,9 +501,6 @@ func TestCase_createNamespace(t *testing.T) {
 				logger:         testutils.NewTestLogger(t, ""),
 			}
 
-			// Treat as succeeded for these unit tests (namespace deletion should proceed).
-			succeeded := true
-			c.succeeded = &succeeded
 			gotErr := c.createNamespace(tm, clk)
 			if tt.wantErr == nil {
 				assert.NoError(t, gotErr)

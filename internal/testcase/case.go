@@ -124,7 +124,7 @@ type Case struct {
 	ns                 *namespace
 	getClient          getClientFuncType
 	getDiscoveryClient getDiscoveryClientFuncType
-	succeeded          *bool
+	succeeded          bool
 
 	logger testutils.Logger
 	// List of log types which should be suppressed.
@@ -240,7 +240,7 @@ func (c *Case) createNamespace(test T, cl clientWithKubeConfig) error {
 	}
 	if c.deletePolicy != v1beta1.DeleteNone {
 		test.Cleanup(func() {
-			if c.deletePolicy == v1beta1.DeleteSuccess && (c.succeeded == nil || !*c.succeeded) {
+			if c.deletePolicy == v1beta1.DeleteSuccess && !c.succeeded {
 				cl.Logf("Skipping namespace deletion for %q: test did not pass (delete policy: success)", c.ns.name)
 				return
 			}
@@ -305,9 +305,6 @@ func (c *Case) maybeReportEvents() {
 func (c *Case) Run(test *testing.T, rep report.TestReporter) {
 	defer rep.Done()
 
-	succeeded := false
-	c.succeeded = &succeeded
-
 	setupReport := rep.Step("setup")
 	if err := c.setup(test); err != nil {
 		setupReport.Failure(err.Error())
@@ -353,7 +350,7 @@ func (c *Case) Run(test *testing.T, rep report.TestReporter) {
 
 	// Mark the case as succeeded only if every step passed.
 	if !caseFailed {
-		*c.succeeded = true
+		c.succeeded = true
 	}
 
 	c.maybeReportEvents()
