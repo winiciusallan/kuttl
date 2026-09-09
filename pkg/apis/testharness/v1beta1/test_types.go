@@ -15,6 +15,8 @@ const KubeconfigLoadingLazy = "Lazy"
 // DeletePolicy controls which test resources are deleted after a test run.
 type DeletePolicy string
 
+// If you are adding a new delete policy, remember to also add it to
+// ValidDeletePolicy function at this same file.
 const (
 	// DeleteAll deletes all resources after the test, regardless of pass or fail (default).
 	DeleteAll DeletePolicy = "all"
@@ -84,6 +86,8 @@ type TestSuite struct {
 	// Deprecated: use Delete as DeleteNone instead.
 	SkipDelete bool `json:"skipDelete"`
 	// Delete controls which resources are deleted after a test run.
+	// The options are: all (default), success (only in passing test cases),
+	// none (never delete). Values other than all imply SkipClusterDelete
 	Delete DeletePolicy `json:"delete,omitempty"`
 	// If set, do not delete the mocked control plane or kind cluster.
 	SkipClusterDelete bool `json:"skipClusterDelete"`
