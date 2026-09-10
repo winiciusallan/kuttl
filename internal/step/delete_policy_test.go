@@ -36,10 +36,9 @@ func newStepWithClient(t *testing.T, cl client.Client, policy harness.DeletePoli
 // TestCreateDeletePolicy_None verifies that DeleteNone registers no cleanup callback,
 // leaving created objects alive after the test ends.
 func TestCreateDeletePolicy_None(t *testing.T) {
-	var cl client.Client
+	cl := fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 
 	t.Run("inner", func(t *testing.T) {
-		cl = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 		s := newStepWithClient(t, cl, harness.DeleteNone)
 
 		errs := s.Create(t, testNamespace)
@@ -56,10 +55,9 @@ func TestCreateDeletePolicy_None(t *testing.T) {
 // TestCreateDeletePolicy_All verifies that DeleteAll cleans up resources regardless of
 // whether the step succeeded.
 func TestCreateDeletePolicy_All(t *testing.T) {
-	var cl client.Client
+	cl := fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 
 	t.Run("inner", func(t *testing.T) {
-		cl = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 		s := newStepWithClient(t, cl, harness.DeleteAll)
 		// s.succeeded remains false – DeleteAll must ignore it.
 
@@ -77,10 +75,9 @@ func TestCreateDeletePolicy_All(t *testing.T) {
 // TestCreateDeletePolicy_Success_OnSuccess verifies that DeleteSuccess deletes resources
 // when s.succeeded is true at cleanup time.
 func TestCreateDeletePolicy_Success_OnSuccess(t *testing.T) {
-	var cl client.Client
+	cl := fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 
 	t.Run("inner", func(t *testing.T) {
-		cl = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 		s := newStepWithClient(t, cl, harness.DeleteSuccess)
 		s.succeeded = true // simulate a passing step
 
@@ -101,10 +98,9 @@ func TestCreateDeletePolicy_Success_OnSuccess(t *testing.T) {
 // TestCreateDeletePolicy_Success_OnFailure verifies that DeleteSuccess preserves resources
 // when s.succeeded is false at cleanup time.
 func TestCreateDeletePolicy_Success_OnFailure(t *testing.T) {
-	var cl client.Client
+	cl := fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 
 	t.Run("inner", func(t *testing.T) {
-		cl = fake.NewClientBuilder().WithScheme(scheme.Scheme).Build()
 		s := newStepWithClient(t, cl, harness.DeleteSuccess)
 		// s.succeeded remains false (default) – cleanup closure must skip deletion.
 

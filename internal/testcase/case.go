@@ -124,7 +124,7 @@ type Case struct {
 	ns                 *namespace
 	getClient          getClientFuncType
 	getDiscoveryClient getDiscoveryClientFuncType
-	succeeded          bool
+	failed             bool
 
 	logger testutils.Logger
 	// List of log types which should be suppressed.
@@ -164,11 +164,6 @@ func NewCase(name string, parentPath string, options ...CaseOption) *Case {
 // GetName returns the name of the test case.
 func (c *Case) GetName() string {
 	return c.name
-}
-
-// Succeeded returns true if every step of the test case passed.
-func (c *Case) Succeeded() bool {
-	return c.succeeded
 }
 
 func (c *Case) deleteNamespace(cl clientWithKubeConfig) error {
@@ -220,7 +215,7 @@ type T interface {
 
 // createNamespace creates the test namespace and, depending on the delete policy, schedules its
 // deletion at cleanup time. When the policy is DeleteSuccess, the cleanup closure reads
-// c.succeeded at cleanup time to decide whether to delete.
+// c.failed at cleanup time to decide whether to delete.
 func (c *Case) createNamespace(test T, cl clientWithKubeConfig) error {
 	cl.Logf("Creating namespace %q", c.ns.name)
 
@@ -245,7 +240,7 @@ func (c *Case) createNamespace(test T, cl clientWithKubeConfig) error {
 	}
 	if c.deletePolicy != v1beta1.DeleteNone {
 		test.Cleanup(func() {
-			if c.deletePolicy == v1beta1.DeleteSuccess && !c.succeeded {
+			if c.deletePolicy == v1beta1.DeleteSuccess && c.failed {
 				cl.Logf("Skipping namespace deletion for %q: test did not pass (delete policy: success)", c.ns.name)
 				return
 			}
@@ -316,7 +311,6 @@ func (c *Case) Run(test *testing.T, rep report.TestReporter) {
 		test.Fatal(err)
 	}
 
-	caseFailed := false
 	for _, testStep := range c.steps {
 		stepReport := rep.Step("step " + testStep.String())
 		testStep.Setup(c.logger, c.getClient, c.getDiscoveryClient)
@@ -348,14 +342,9 @@ func (c *Case) Run(test *testing.T, rep report.TestReporter) {
 			for _, err := range errs {
 				test.Error(err)
 			}
-			caseFailed = true
+			c.failed = true
 			break
 		}
-	}
-
-	// Mark the case as succeeded only if every step passed.
-	if !caseFailed {
-		c.succeeded = true
 	}
 
 	c.maybeReportEvents()

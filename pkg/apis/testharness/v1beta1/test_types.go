@@ -15,8 +15,6 @@ const KubeconfigLoadingLazy = "Lazy"
 // DeletePolicy controls which test resources are deleted after a test run.
 type DeletePolicy string
 
-// If you are adding a new delete policy, remember to also add it to
-// ValidDeletePolicy function at this same file.
 const (
 	// DeleteAll deletes all resources after the test, regardless of pass or fail (default).
 	DeleteAll DeletePolicy = "all"
@@ -24,6 +22,8 @@ const (
 	DeleteSuccess DeletePolicy = "success"
 	// DeleteNone skips deletion of resources in all test cases.
 	DeleteNone DeletePolicy = "none"
+	// If you are adding a new delete policy, remember to also add it to
+	// ValidDeletePolicy function at this same file.
 )
 
 // RestConfig embeds rest.Config to implement custom DeepCopyInto method.

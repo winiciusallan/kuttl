@@ -60,7 +60,6 @@ type Harness struct {
 	stopping      bool
 	bgProcesses   []*exec.Cmd
 	report        *report.Testsuites
-	anyTestFailed bool
 }
 
 // LoadTests loads all of the tests in a given directory.
@@ -423,12 +422,6 @@ func (h *Harness) RunTests() {
 					}
 
 					test.Run(t, suiteReport.NewTestReporter(test.GetName()))
-
-					if !test.Succeeded() {
-						h.clientLock.Lock()
-						h.anyTestFailed = true
-						h.clientLock.Unlock()
-					}
 				})
 			}
 		}
@@ -623,11 +616,10 @@ func (h *Harness) Stop() {
 	}
 }
 
-// shouldSkipClusterDelete returns true when the cluster should be kept alive after the run.
-// If --skip-cluster-delete was explicitly set by the user it always wins.
-// Otherwise the decision is inferred from the delete policy:
-// - DeleteNone always keep the cluster.
-// - DeleteSuccess keeps the cluster when at least one test case failed.
+// shouldSkipClusterDelete returns true when the cluster should be
+// kept alive after the run. If --skip-cluster-delete was explicitly
+// set by the user it always wins. Otherwise the decision is inferred
+// from the delete policy and the test success/failure.
 func (h *Harness) shouldSkipClusterDelete() bool {
 	// An explicit --skip-cluster-delete always wins.
 	if h.TestSuite.SkipClusterDelete {
@@ -638,12 +630,9 @@ func (h *Harness) shouldSkipClusterDelete() bool {
 		return true
 	}
 	if policy == harness.DeleteSuccess {
-		h.clientLock.Lock()
-		failed := h.anyTestFailed
-		h.clientLock.Unlock()
-		return failed
+		return h.T.Failed()
 	}
-	return h.TestSuite.SkipClusterDelete
+	return false
 }
 
 // wraps Test.Fatal in order to clean up harness
